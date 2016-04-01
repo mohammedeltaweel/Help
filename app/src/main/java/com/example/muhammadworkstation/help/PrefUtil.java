@@ -40,4 +40,12 @@ public class PrefUtil {
             return false;
         }
     }
+
+    public static void clearUserPref(Context context){
+        SharedPreferences preferences=PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor=preferences.edit();
+        editor.remove(PrefUtil.EMAIL_USER_KEY);
+        editor.remove(PrefUtil.PASSWORD_USER_KEY);
+        editor.commit();
+    }
 }

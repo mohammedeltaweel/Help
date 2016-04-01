@@ -4,87 +4,84 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
-import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.Button;
 
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 
-import java.util.Random;
-
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity  {
 
 
-    Firebase mRef;
-    ListView listView;
-    EditText editText;
-    ImageButton sendButton;
+    Button others;
+    Firebase ref;
+    LocationHandler locationHandler;
+    Firebase helpChild;
+    protected static final String SIGN_OUT_ACTION_KEY="signOutAction";
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        Intent i =new Intent(this,LoginActivity.class);
-        startActivity(i);
 
-        editText= (EditText) findViewById(R.id.editText);
-        listView= (ListView) findViewById(R.id.listView);
-        sendButton= (ImageButton) findViewById(R.id.sendButton);
+        if (!PrefUtil.thereIsPref(this,PrefUtil.EMAIL_USER_KEY)){
+            Intent i =new Intent(this,LoginActivity.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(i);
+        }
 
-
-
-        mRef=new Firebase("https://resplendent-heat-981.firebaseio.com/condition");
-
-        editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-
-                if (actionId== EditorInfo.IME_ACTION_SEND){
-                    sendMessage();
-
-                }
-                return true;
-            }
-        });
+        locationHandler=new LocationHandler(this,this);
 
 
-        sendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendMessage();
-                editText.setText("");
-            }
-        });
 
+
+
+
+
+        ref = new Firebase("https://muhammadhelp.firebaseio.com");
+        helpChild = ref.child("child");
+
+        others= (Button) findViewById(R.id.other);
+        others.setOnClickListener(otherClick);
 
 
     }
 
+
+
+
+
+    View.OnClickListener otherClick=new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Intent i =new Intent(MainActivity.this,MapsActivity.class);
+            startActivity(i);
+        }
+    };
+
+
     private void sendMessage() {
-        String message=editText.getText().toString();
-        Random random=new Random();
-        if (!message.equals("")){
-            String author=getAuthor();
-            ChatMessage cm=new ChatMessage(author,message);
-            mRef.push().setValue(cm);
+        String message="" ;
+        if (!message.equals("")) {
+            String author = getAuthor();
+            ChatMessage cm = new ChatMessage(author, message);
+            ref.push().setValue(cm);
         }
     }
 
     private String getAuthor() {
 
-         AuthData authData= mRef.getAuth();
-        if (authData!=null){
+        AuthData authData = ref.getAuth();
+        if (authData != null) {
             return authData.getUid();
+        } else {
+            return "no";
         }
-        return "no";
     }
 
     @Override
@@ -104,8 +101,33 @@ public class MainActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
+        }else if (id==R.id.action_signOut){
+            Intent i =new Intent(MainActivity.this, LoginActivity.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            i.putExtra(SIGN_OUT_ACTION_KEY, true);
+            PrefUtil.clearUserPref(MainActivity.this);
+            startActivity(i);
         }
+
 
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        /*mGoogleApiClient.connect();*/
+
+        locationHandler.locationConnect();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        /*mGoogleApiClient.disconnect();*/
+
+        locationHandler.locationDisconnect();
+    }
+
+
 }

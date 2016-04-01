@@ -12,34 +12,16 @@
     tools:context="com.example.muhammadworkstation.help.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <ListView
-        android:layout_width="match_parent"
+
+    <Button
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/listView"
+        android:text="Other Poeple Locations"
+        android:id="@+id/other"
         android:layout_alignParentTop="true"
-        android:layout_above="@+id/linearLayout" />
-
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:id="@+id/linearLayout">
-
-        <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:lines="1"
-            android:singleLine="true"
-            android:imeOptions="actionSend"
-            android:id="@+id/editText"/>
-
-        <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_send"
-            android:id="@+id/sendButton"/>
-
-    </LinearLayout>
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginLeft="54dp"
+        android:layout_marginStart="54dp"
+        android:layout_marginTop="81dp" />
 </RelativeLayout>

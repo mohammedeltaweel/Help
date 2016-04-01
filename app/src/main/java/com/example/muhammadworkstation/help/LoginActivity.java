@@ -6,10 +6,10 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
@@ -21,6 +21,7 @@ public class LoginActivity extends AppCompatActivity {
     EditText email,password;
     Button loginButton, signUpButton;
     Firebase ref;
+    private boolean signOut;
 
 
     @Override
@@ -29,6 +30,21 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        ref=new Firebase("https://muhammadhelp.firebaseio.com");
+
+        Intent intent=getIntent();
+        signOut= intent.getBooleanExtra(MainActivity.SIGN_OUT_ACTION_KEY,false);
+
+        email = (EditText) findViewById(R.id.loginEmail);
+        password= (EditText) findViewById(R.id.loginPassword);
+        loginButton= (Button) findViewById(R.id.loginButton);
+        signUpButton= (Button) findViewById(R.id.logSignUpButton);
+
+        if (!signOut){
+            authorize();
+        }
+
+
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -38,37 +54,42 @@ public class LoginActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        ref=new Firebase("https://resplendent-heat-981.firebaseio.com/help");
-
-        email = (EditText) findViewById(R.id.loginEmail);
-        password= (EditText) findViewById(R.id.loginPassword);
-        loginButton= (Button) findViewById(R.id.loginButton);
-        signUpButton= (Button) findViewById(R.id.logSignUpButton);
-
-        if (PrefUtil.thereIsPref(this,PrefUtil.EMAIL_USER_KEY)){
-            email.setVisibility(View.INVISIBLE);
-            password.setVisibility(View.INVISIBLE);
-            loginButton.setVisibility(View.INVISIBLE);
-            signUpButton.setVisibility(View.INVISIBLE);
-
-            authorize(PrefUtil.getSavedPref(LoginActivity.this,PrefUtil.EMAIL_USER_KEY),PrefUtil.getSavedPref(LoginActivity.this,PrefUtil.PASSWORD_USER_KEY));
 
 
-        }else {
-            loginButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    authorize(email.getText().toString(),password.getText().toString());
-                }
-            });
 
-        }
+
+        loginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                PrefUtil.saveToPref(LoginActivity.this,PrefUtil.EMAIL_USER_KEY,email.getText().toString());
+                PrefUtil.saveToPref(LoginActivity.this,PrefUtil.PASSWORD_USER_KEY,password.getText().toString());
+
+                ref.authWithPassword(email.getText().toString(), password.getText().toString(), new Firebase.AuthResultHandler() {
+                    @Override
+                    public void onAuthenticated(AuthData authData) {
+
+                        Log.i("auth", "Authenticated and auth id is " + authData.getUid());
+                        Intent i = new Intent(LoginActivity.this, MainActivity.class);
+                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(i);
+                    }
+
+                    @Override
+                    public void onAuthenticationError(FirebaseError firebaseError) {
+
+                    }
+                });
+
+            }
+        });
+
+
 
         signUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i=new Intent(LoginActivity.this,SignUpActivity.class);
+                Intent i = new Intent(LoginActivity.this, SignUpActivity.class);
                 startActivity(i);
             }
         });
@@ -80,23 +101,41 @@ public class LoginActivity extends AppCompatActivity {
 
 
 
+
+
+
+
+
     }
 
-    private void authorize(String email,String passwrod){
+   private void authorize(){
+       if (PrefUtil.thereIsPref(this,PrefUtil.EMAIL_USER_KEY)){
+           email.setVisibility(View.INVISIBLE);
+           password.setVisibility(View.INVISIBLE);
+           loginButton.setVisibility(View.INVISIBLE);
+           signUpButton.setVisibility(View.INVISIBLE);
 
-        ref.authWithPassword(email, passwrod, new Firebase.AuthResultHandler() {
-            @Override
-            public void onAuthenticated(AuthData authData) {
-                Intent intent=new Intent(LoginActivity.this,MainActivity.class);
-                startActivity(intent);
-            }
 
-            @Override
-            public void onAuthenticationError(FirebaseError firebaseError) {
-                Toast.makeText(LoginActivity.this,"wrong email or password",Toast.LENGTH_LONG).show();
-            }
-        });
-    }
+           ref.authWithPassword(PrefUtil.getSavedPref(this, PrefUtil.EMAIL_USER_KEY), PrefUtil.getSavedPref(this, PrefUtil.PASSWORD_USER_KEY), new Firebase.AuthResultHandler() {
+               @Override
+               public void onAuthenticated(AuthData authData) {
+                   Intent i = new Intent(LoginActivity.this, MainActivity.class);
+                   i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                   startActivity(i);
+               }
+
+               @Override
+               public void onAuthenticationError(FirebaseError firebaseError) {
+
+               }
+           });
+
+
+
+       }
+
+
+   }
 
 
 
